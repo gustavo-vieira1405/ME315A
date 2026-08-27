@@ -1,0 +1,230 @@
+---
+title: "Lista03_Mazo"
+author: "Gustavo Mazo Vieira"
+format: pdf
+editor: visual
+---
+
+## Conexão R \>\>\> SQLite
+
+```{r}
+library(DBI)
+library(RSQLite)
+
+con <- dbConnect(SQLite(), "me315.sqlite")
+```
+
+## Questão 1
+
+Exiba os valores de STATE e FEE da tabela PRESERVE mas sem duplicados.
+
+```{sql connection = con}
+SELECT DISTINCT STATE, FEE FROM PRESERVE
+```
+
+## Questão 2
+
+Exiba todos os valores de DNO na tabela EMPLOYEE. Não exiba valores duplicados.
+
+```{sql connection = con}
+SELECT DISTINCT DNO FROM EMPLOYEE
+```
+
+## Questão 3
+
+Execute as QUERYS a seguir. Examine as tabelas resultantes e faça as observações relevantes. SELECT DNO, SALARY FROM EMPLOYEE SELECT DISTINCT DNO, SALARY FROM EMPLOYEE SELECT DISTINCT DNO, SALARY FROM EMPLOYEE ORDER BY DNO, SALARY
+
+```{sql connection="con"}
+SELECT DNO, SALARY FROM EMPLOYEE
+```
+
+```{sql connection="con"}
+SELECT DISTINCT DNO, SALARY FROM EMPLOYEE
+```
+
+```{sql connection="con"}
+SELECT DISTINCT DNO, SALARY FROM EMPLOYEE ORDER BY DNO, SALARY
+```
+
+Resposta: A primeira e segunda tabela apresentam resultados iguais pois, ao usar distinct com duas colunas, a função só remove alguma linha caso duas linhas apresentem ambos os valores das colunas iguais, o que não ocorre neste caso. A Terceira coluna simplesmente ordena de ordem crescente os valores apresentados nas primeiras duas tabelas
+
+## Questão 4
+
+Exiba todas as informações sobre qualquer reserva natural em Montana que seja menor que 1.000 acres.
+
+```{sql connection="con"}
+SELECT * FROM PRESERVE
+WHERE STATE = "MT" AND ACRES < 1000
+```
+
+## Questão 5
+
+Exiba todas as informações sobre qualquer reserva natural cujo valor de ACRES esteja entre 1200 e 15000, inclusive.
+
+```{sql connection="con"}
+SELECT * FROM PRESERVE
+WHERE ACRES >= 1200 AND ACRES <= 15000
+```
+
+## Questão 6
+
+Exiba todas as informações sobre qualquer reserva natural localizada em Montana que não possua taxa de entrada e seja maior que 10.000 acres.
+
+```{sql connection="con"}
+SELECT * FROM PRESERVE
+WHERE STATE = "MT" AND ACRES > 10000 AND FEE = 0 
+```
+
+## Questão 7
+
+Exiba todas as informações sobre as reservas naturais localizadas em Montana ou Massachusetts.
+
+```{sql connection="con"}
+SELECT * FROM PRESERVE
+WHERE STATE = "MT" OR STATE = 'MA'
+```
+
+## Questão 8
+
+Exiba todas as informações sobre qualquer reserva natural localizada em Montana ou qualquer reserva que seja menor que 1.000 acres.
+
+```{sql connection="con"}
+SELECT * FROM PRESERVE
+WHERE STATE = "MT" OR ACRES < 1000
+```
+
+## Questão 9
+
+Exiba o número e o nome de qualquer reserva natural que possua taxa de entrada que não seja igual a zero.
+
+```{sql connection="con"}
+SELECT PNO, PNAME FROM PRESERVE
+WHERE FEE <> 0 
+```
+
+## Questão 10
+
+Exiba o número e o nome das reservas naturais que não possuem taxa de entrada de US\$ 3,00 e não possuem taxa de US 10,00.
+
+```{sql connection="con"}
+SELECT PNO, PNAME FROM PRESERVE
+WHERE FEE <> 3 AND FEE <> 10 
+```
+
+## Questão 11
+
+Exiba todas as informações sobre qualquer reserva natural localizada no Arizona que não possua taxa de entrada, ou qualquer reserva que seja menor que 100 acres (independentemente de seus valores de STATE e FEE).
+
+```{sql connection="con"}
+SELECT * FROM PRESERVE
+WHERE (STATE = "AZ" AND FEE = 0) OR (ACRES < 100)
+```
+
+## Questão 12
+
+Exiba todas as informações sobre qualquer reserva natural que seja menor que 1.000 acres e tenha taxa de entrada de zero dólares ou esteja localizada no Arizona.
+
+```{sql connection="con"}
+SELECT * FROM PRESERVE
+WHERE (ACRES < 1000 AND FEE = 0) OR STATE = "AZ"
+```
+
+## Questão 13
+
+Selecione todas as informações sobre qualquer reserva natural com taxa de entrada que não seja maior que zero, ou qualquer outra reserva, independentemente de sua taxa, que esteja localizada em Montana e seja maior que 1.000 acres.
+
+```{sql connection="con"}
+SELECT * FROM PRESERVE
+WHERE (FEE = 0) OR (STATE = "MT" AND ACRES > 1000)
+```
+
+## Questão 14
+
+Exiba todas as informações sobre todas as reservas naturais, exceto aquelas reservas de Montana sem taxa de entrada.
+
+```{sql connection="con"}
+SELECT * FROM PRESERVE
+WHERE NOT (STATE = "MT" AND FEE = 0)
+```
+
+## Questão 15
+
+As seguintes cláusulas WHERE são logicamente equivalentes? WHERE STATE = 'MA' AND (ACRES \> 1000 OR FEE = 0.0) WHERE (STATE = 'MA' AND ACRES \> 1000) OR (STATE = 'MA' AND FEE = 0.0)
+
+```{sql connection="con"}
+SELECT * FROM PRESERVE
+WHERE STATE = 'MA' AND (ACRES > 1000 OR FEE = 0.0)
+```
+
+```{sql connection="con"}
+SELECT * FROM PRESERVE
+WHERE (STATE = 'MA' AND ACRES > 1000) OR (STATE = 'MA' AND FEE = 0.0)
+```
+
+Resposta: Sim, são logicamente equivalentes
+
+## Questão 16
+
+As seguintes cláusulas WHERE são logicamente equivalentes? WHERE STATE = 'MA' OR (ACRES \> 1000 AND FEE = 0.0) WHERE (STATE = 'MA' OR ACRES \> 1000) AND (STATE = 'MA' OR FEE = 0.0)
+
+```{sql connection="con"}
+SELECT * FROM PRESERVE
+WHERE STATE = 'MA' OR (ACRES > 1000 AND FEE = 0.0)
+```
+
+```{sql connection="con"}
+SELECT * FROM PRESERVE
+WHERE (STATE = 'MA' OR ACRES > 1000) AND (STATE = 'MA' OR FEE = 0.0)
+```
+
+Resposta: Sim, são logicamente equivalentes
+
+## Questão 17
+
+As seguintes cláusulas WHERE são logicamente equivalentes? WHERE NOT (ACRES \< 50 AND STATE = 'MA') WHERE NOT ACRES \< 50 AND NOT STATE = 'MA' WHERE ACRES \>= 50 OR STATE \<\> 'MA'
+
+```{sql connection="con"}
+SELECT * FROM PRESERVE
+WHERE NOT (ACRES < 50 AND STATE = 'MA')
+```
+
+```{sql connection="con"}
+SELECT * FROM PRESERVE
+WHERE NOT ACRES < 50 AND NOT STATE = 'MA'
+```
+
+```{sql connection="con"}
+SELECT * FROM PRESERVE
+WHERE ACRES >= 50 OR STATE <> 'MA'
+```
+
+Resposta: A primeira e terceira cláusula são logicamente equivalentes. A segunda cláusula é diferente das outras duas pois ela exclui qualquer reserva que apresenta OU acres \< 50 OU pertence ao estado de Massachusetts, enquanto as outras duas excluem apenas quando uma reserva apresenta acres \< 50 E pertence ao estado de Massachusetts.
+
+## Questão 18
+
+As seguintes cláusulas WHERE são logicamente equivalentes? WHERE NOT (ACRES \< 50 OR STATE = 'MA') WHERE NOT ACRES \< 50 OR NOT STATE = 'MA' WHERE NOT ACRES \< 50 AND NOT STATE = 'MA'
+
+```{sql connection="con"}
+SELECT * FROM PRESERVE
+WHERE NOT (ACRES < 50 OR STATE = 'MA')
+```
+
+```{sql connection="con"}
+SELECT * FROM PRESERVE
+WHERE NOT ACRES < 50 OR NOT STATE = 'MA'
+```
+
+```{sql connection="con"}
+SELECT * FROM PRESERVE
+WHERE NOT ACRES < 50 AND NOT STATE = 'MA'
+```
+
+Resposta: A primeira e terceira cláusula são logicamente equivalentes. A segunda cláusula é diferente das outras duas pois ela exclui qualquer reserva que apresenta acres \< 50 E pertence ao estado de Massachusetts, enquanto as outras duas excluem quando uma reserva OU apresenta acres \< 50 OU pertence ao estado de Massachusetts. De maneira geral:
+
+A primeira e a terceira cláusulas do exercício 17 são logicamente equivalentes à segunda cláusula do exercício 18, enquanto a segunda cláusula do exercício 17 é logicamente equivalente à primeira e à terceira cláusulas do exercício 18.
+
+```{r}
+Sys.setenv(TZ = "America/Sao_Paulo")
+Sys.time()
+```
+
