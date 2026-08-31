@@ -1,0 +1,144 @@
+---
+title: "Lab03_Mazo"
+author: "Gustavo Mazo Vieira"
+format: pdf
+editor: visual
+---
+
+## Questão 1
+
+```{r}
+library(readr)
+library(dplyr)
+library(stringr)
+library(tidyverse)
+library(webshot2)
+
+airports <- read_csv(
+  "~/Lab03 ME315/airports.csv",
+  col_select = c(IATA_CODE, CITY, STATE, LATITUDE, LONGITUDE)
+)
+
+airlines <- read_csv("~/Lab03 ME315/airlines.csv")
+
+estatisticas <- function(x, pos) {
+
+  x <- x |>
+    filter(
+      !is.na(DESTINATION_AIRPORT),
+      !is.na(ARRIVAL_DELAY)
+    )
+
+  aeroportos_validos <- str_subset(
+    unique(x$DESTINATION_AIRPORT),
+    "^[^1]"
+  )
+
+  x <- x |>
+    filter(DESTINATION_AIRPORT %in% aeroportos_validos)
+
+  x |> group_by(DESTINATION_AIRPORT) |>
+    summarise(
+      n = n(),
+      soma_atraso = sum(ARRIVAL_DELAY),
+      .groups = "drop"
+    )
+}
+
+resultado <- read_csv_chunked(
+  "~/Lab03 ME315/flights.csv",
+  callback = DataFrameCallback$new(estatisticas),
+  chunk_size = 1000000,
+  col_types = cols_only(
+    DESTINATION_AIRPORT = col_character(),
+    ARRIVAL_DELAY = col_double()
+  )
+)
+
+estatisticas_finais <- bind_rows(resultado) |>
+  group_by(DESTINATION_AIRPORT) |>
+  summarise(
+    n = sum(n),
+    soma_atraso = sum(soma_atraso),
+    .groups = "drop"
+  )
+
+flights <- estatisticas_finais |>
+  mutate(media_atraso = soma_atraso / n) |>
+  select(
+    DESTINATION_AIRPORT,
+    media_atraso
+  )
+
+View(flights)
+```
+
+## Questão 2
+
+Resposta:\
+Chave na tabela flights: DESTINATION_AIRPORT
+
+Chave na tabela airports: IATA_CODE
+
+```{r}
+aeroportos_ausentes <- flights |>
+  anti_join(
+    airports,
+    by = c("DESTINATION_AIRPORT" = "IATA_CODE")
+  ) |>
+  distinct(DESTINATION_AIRPORT)
+
+print(aeroportos_ausentes)
+
+flights <- flights |>
+  left_join(
+    airports |>
+      select(IATA_CODE, CITY, STATE),
+    by = c("DESTINATION_AIRPORT" = "IATA_CODE")
+  )
+
+flights
+```
+
+## Questão 3
+
+```{r}
+aeroportos_por_estado <- flights |>
+  count(STATE, name = "numero_aeroportos") |>
+  arrange(desc(numero_aeroportos))
+
+aeroportos_por_estado
+```
+
+##Questão 4
+
+```{r}
+library(leaflet)
+
+this <- flights |>
+  left_join(airports |>
+      select(IATA_CODE, LATITUDE, LONGITUDE),
+    by = c("DESTINATION_AIRPORT" = "IATA_CODE")
+  ) |>
+  leaflet() |>
+  addTiles() |>
+  addMarkers(
+    lng = ~LONGITUDE,
+    lat = ~LATITUDE,
+    popup = ~paste0(
+      "<b>Aeroporto:</b> ", DESTINATION_AIRPORT,
+      "<br><b>Cidade:</b> ", CITY,
+      "<br><b>Estado:</b> ", STATE,
+      "<br><b>Atraso médio:</b> ", round(media_atraso, 2), " minutos"
+    )
+  )
+
+this
+```
+
+# Horário
+
+```{r}
+Sys.setenv(TZ = "America/Sao_Paulo")
+Sys.time()
+```
