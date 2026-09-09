@@ -1,0 +1,123 @@
+---
+title: "Lab04_Mazo"
+author: "Gustavo Mazo Vieira"
+format: pdf
+editor: visual
+---
+
+## Questão 1
+
+```{r}
+library(readxl)
+library(tidyverse)
+```
+
+## Questão 2
+
+```{r}
+fname <- file.path("\\\\smb/ra187263/Documentos", "WDIEXCEL.xlsx")
+
+file.exists(fname)
+```
+
+## Questão 3
+
+```{r}
+countries <- read_excel("WDIEXCEL.xlsx", sheet = "Country")
+```
+
+## Questão 4
+
+```{r}
+selecionados <- c('Brazil', 'Bolivia', 'Bermuda', 'Belize', 'Belarus')
+
+countries <- countries |>
+  filter(`Table Name` %in% selecionados)
+```
+
+## Questão 5
+
+```{r}
+WDI <- read_excel("WDIEXCEL.xlsx", sheet = "Data")
+```
+
+## Questão 6
+
+```{r}
+WDI <- WDI |>
+  select(`Country Code`, `Indicator Code`, `1960`:`2018`)
+```
+
+## Questão 7
+
+Resposta: Não está em formato tidy, dado que as colunas númericas poderiam ocupar uma única variável 'years'
+
+```{r}
+WDI <- WDI |>
+  pivot_longer(
+    cols = `1960`:`2018`,
+    names_to = "YEAR",
+    values_to = "VALUE"
+  )
+```
+
+## Questão 8
+
+Resposta: verificando manualmente, a coluna "YEAR" está em formato character. Prova:
+
+```{r}
+class(WDI$YEAR)
+```
+
+Transformando em inteiro:
+
+```{r}
+ WDI <- WDI |>
+  mutate(YEAR = as.integer(YEAR))
+```
+
+## Questão 9
+
+```{r}
+WDI <- WDI |>
+  filter(
+    `Country Code` %in% countries$`Country Code`,`Indicator Code` == "SP.DYN.CBRT.IN"
+  ) |>
+  left_join(countries |> 
+              select(`Country Code`, `Short Name`), by = "Country Code"
+  ) |>
+  select(`Country Code`,`Short Name`,YEAR ,VALUE
+  ) |>
+  rename(`SP.DYN.CBRT.IN` = VALUE)
+```
+
+## Questão 10
+
+```{r}
+WDI <- WDI |>
+  arrange(`Short Name`, YEAR)
+```
+
+## Questão 11
+
+```{r}
+ggplot(WDI, aes(
+  x = YEAR,
+  y = `SP.DYN.CBRT.IN`,
+  color = `Short Name`,
+  group = `Short Name`
+)) +
+  geom_line(linewidth = 1) +
+  labs(
+    x = "Ano",
+    y = "Taxa bruta de natalidade",
+    color = "País"
+  ) +
+  scale_x_continuous(breaks = seq(1960, 2018, by = 10)) +
+  theme_minimal()
+```
+```{r}
+Sys.setenv(TZ = "America/Sao_Paulo")
+Sys.time()
+```
+
