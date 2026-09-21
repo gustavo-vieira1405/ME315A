@@ -1,0 +1,92 @@
+---
+title: "Lab06_Mazo"
+author: "Gustavo Mazo Vieira"
+format: pdf
+editor: visual
+---
+
+1)
+
+```{r}
+path <- "\\\\smb/ra187263/Documentos"
+fname <- file.path(path, "disco.db")
+```
+
+2)
+
+```{r}
+library(DBI)
+library(RSQLite)
+
+conn <- dbConnect(SQLite(), fname)
+```
+
+3)
+
+```{r}
+dbListTables(conn)
+```
+
+4)
+
+```{r}
+dbListFields(conn, 'customers')
+```
+
+5)
+
+```{r}
+dbGetQuery(conn, "SELECT COUNT(*) FROM CUSTOMERS")
+```
+
+6)
+
+```{sql connection = conn}
+SELECT COUNT(DISTINCT(Country)) FROM CUSTOMERS
+```
+
+7)
+
+```{sql connection = conn}
+SELECT Country, COUNT(*) FROM Customers
+GROUP BY Country
+ORDER BY COUNT(*) DESC
+```
+
+8)
+
+```{sql connection = conn}
+SELECT Country, COUNT(*) FROM Customers
+GROUP BY Country
+ORDER BY COUNT(*) DESC
+LIMIT 5
+```
+
+9)
+
+```{sql connection = conn}
+SELECT DISTINCT Country FROM Customers
+WHERE LENGTH(Country) = 6
+```
+
+10)
+
+```{sql connection = conn}
+SELECT DISTINCT tracks.Name FROM customers
+INNER JOIN invoices ON customers.CustomerId = invoices.CustomerId  
+INNER JOIN invoice_items ON invoices.InvoiceId = invoice_items.InvoiceId
+INNER JOIN tracks ON invoice_items.TrackId = tracks.TrackId
+WHERE customers.Country = 'Brazil'
+```
+
+11)
+
+```{r}
+dbDisconnect(conn)
+```
+
+```{r}
+Sys.setenv(TZ = "America/Sao_Paulo")
+Sys.time()
+```
+
