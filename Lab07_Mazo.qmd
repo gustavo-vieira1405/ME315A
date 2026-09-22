@@ -1,0 +1,350 @@
+---
+title: "Lab07_Mazo"
+author: "Gustavo Mazo Vieira"
+format: pdf
+editor: visual
+---
+
+1)
+
+```{r}
+library(DBI)
+library(RSQLite)
+
+conn <- dbConnect(SQLite(), "uwmadison.sqlite3")
+```
+
+2)
+
+```{r}
+dbListTables(conn)
+```
+
+```{r}
+professores_stat <- dbGetQuery(conn, "
+  SELECT DISTINCT instructors.id,instructors.name FROM subjects
+  INNER JOIN subject_memberships ON subjects.code = subject_memberships.subject_code
+  INNER JOIN course_offerings ON subject_memberships.course_offering_uuid = course_offerings.uuid
+  INNER JOIN sections ON course_offerings.uuid = sections.course_offering_uuid
+  INNER JOIN teachings ON sections.uuid = teachings.section_uuid
+  INNER JOIN instructors ON teachings.instructor_id = instructors.id
+  WHERE subjects.abbreviation = 'STAT'
+  ORDER BY instructors.name
+")
+
+nrow(professores_stat)
+```
+
+3)
+
+```{r}
+gpa_stat <- dbGetQuery(conn, "
+  SELECT
+    course_offerings.uuid AS course_offering_uuid,
+    courses.number AS disciplina,
+    courses.name AS nome_disciplina,
+    grade_distributions.section_number,
+
+    (
+      4.0 * grade_distributions.a_count +
+      3.5 * grade_distributions.ab_count +
+      3.0 * grade_distributions.b_count +
+      2.5 * grade_distributions.bc_count +
+      2.0 * grade_distributions.c_count +
+      1.0 * grade_distributions.d_count +
+      0.0 * grade_distributions.f_count
+    )
+    /
+    NULLIF(
+      grade_distributions.a_count +
+      grade_distributions.ab_count +
+      grade_distributions.b_count +
+      grade_distributions.bc_count +
+      grade_distributions.c_count +
+      grade_distributions.d_count +
+      grade_distributions.f_count,
+      0
+    ) AS gpa
+
+  FROM subjects
+
+  INNER JOIN subject_memberships
+    ON subjects.code = subject_memberships.subject_code
+
+  INNER JOIN course_offerings
+    ON subject_memberships.course_offering_uuid = course_offerings.uuid
+
+  INNER JOIN courses
+    ON course_offerings.course_uuid = courses.uuid
+
+  INNER JOIN grade_distributions
+    ON course_offerings.uuid = grade_distributions.course_offering_uuid
+
+  WHERE subjects.abbreviation = 'STAT'
+")
+```
+
+```{r}
+professor_dificil <- dbGetQuery(conn, "
+  SELECT
+    instructors.name AS professor,
+
+    AVG(
+      (
+        4.0 * grade_distributions.a_count +
+        3.5 * grade_distributions.ab_count +
+        3.0 * grade_distributions.b_count +
+        2.5 * grade_distributions.bc_count +
+        2.0 * grade_distributions.c_count +
+        1.0 * grade_distributions.d_count +
+        0.0 * grade_distributions.f_count
+      )
+      /
+      NULLIF(
+        grade_distributions.a_count +
+        grade_distributions.ab_count +
+        grade_distributions.b_count +
+        grade_distributions.bc_count +
+        grade_distributions.c_count +
+        grade_distributions.d_count +
+        grade_distributions.f_count,
+        0
+      )
+    ) AS gpa_medio
+
+  FROM subjects
+
+  INNER JOIN subject_memberships
+    ON subjects.code = subject_memberships.subject_code
+
+  INNER JOIN course_offerings
+    ON subject_memberships.course_offering_uuid = course_offerings.uuid
+
+  INNER JOIN sections
+    ON course_offerings.uuid = sections.course_offering_uuid
+
+  INNER JOIN grade_distributions
+    ON sections.course_offering_uuid = grade_distributions.course_offering_uuid
+    AND sections.number = grade_distributions.section_number
+
+  INNER JOIN teachings
+    ON sections.uuid = teachings.section_uuid
+
+  INNER JOIN instructors
+    ON teachings.instructor_id = instructors.id
+
+  WHERE subjects.abbreviation = 'STAT'
+    AND instructors.name IS NOT NULL
+
+  GROUP BY instructors.id, instructors.name
+
+  HAVING SUM(
+    grade_distributions.a_count +
+    grade_distributions.ab_count +
+    grade_distributions.b_count +
+    grade_distributions.bc_count +
+    grade_distributions.c_count +
+    grade_distributions.d_count +
+    grade_distributions.f_count
+  ) > 0
+
+  ORDER BY gpa_medio ASC
+
+  LIMIT 1
+")
+
+professor_dificil
+```
+```{r}
+professor_facil <- dbGetQuery(conn, "
+  SELECT
+    instructors.name AS professor,
+
+    AVG(
+      (
+        4.0 * grade_distributions.a_count +
+        3.5 * grade_distributions.ab_count +
+        3.0 * grade_distributions.b_count +
+        2.5 * grade_distributions.bc_count +
+        2.0 * grade_distributions.c_count +
+        1.0 * grade_distributions.d_count +
+        0.0 * grade_distributions.f_count
+      )
+      /
+      NULLIF(
+        grade_distributions.a_count +
+        grade_distributions.ab_count +
+        grade_distributions.b_count +
+        grade_distributions.bc_count +
+        grade_distributions.c_count +
+        grade_distributions.d_count +
+        grade_distributions.f_count,
+        0
+      )
+    ) AS gpa_medio
+
+  FROM subjects
+
+  INNER JOIN subject_memberships
+    ON subjects.code = subject_memberships.subject_code
+
+  INNER JOIN course_offerings
+    ON subject_memberships.course_offering_uuid = course_offerings.uuid
+
+  INNER JOIN sections
+    ON course_offerings.uuid = sections.course_offering_uuid
+
+  INNER JOIN grade_distributions
+    ON sections.course_offering_uuid = grade_distributions.course_offering_uuid
+    AND sections.number = grade_distributions.section_number
+
+  INNER JOIN teachings
+    ON sections.uuid = teachings.section_uuid
+
+  INNER JOIN instructors
+    ON teachings.instructor_id = instructors.id
+
+  WHERE subjects.abbreviation = 'STAT'
+
+  GROUP BY instructors.id, instructors.name
+
+  ORDER BY gpa_medio DESC
+
+  LIMIT 1
+")
+
+professor_facil
+```
+
+```{r}
+disciplina_dificil <- dbGetQuery(conn, "
+  SELECT
+    courses.number AS disciplina,
+    courses.name AS nome_disciplina,
+
+    AVG(
+      (
+        4.0 * grade_distributions.a_count +
+        3.5 * grade_distributions.ab_count +
+        3.0 * grade_distributions.b_count +
+        2.5 * grade_distributions.bc_count +
+        2.0 * grade_distributions.c_count +
+        1.0 * grade_distributions.d_count +
+        0.0 * grade_distributions.f_count
+      )
+      /
+      NULLIF(
+        grade_distributions.a_count +
+        grade_distributions.ab_count +
+        grade_distributions.b_count +
+        grade_distributions.bc_count +
+        grade_distributions.c_count +
+        grade_distributions.d_count +
+        grade_distributions.f_count,
+        0
+      )
+    ) AS gpa_medio
+
+  FROM subjects
+
+  INNER JOIN subject_memberships
+    ON subjects.code = subject_memberships.subject_code
+
+  INNER JOIN course_offerings
+    ON subject_memberships.course_offering_uuid = course_offerings.uuid
+
+  INNER JOIN courses
+    ON course_offerings.course_uuid = courses.uuid
+
+  INNER JOIN grade_distributions
+    ON course_offerings.uuid = grade_distributions.course_offering_uuid
+
+  WHERE subjects.abbreviation = 'STAT'
+    AND courses.name IS NOT NULL
+
+  GROUP BY courses.uuid, courses.number, courses.name
+
+  HAVING SUM(
+    grade_distributions.a_count +
+    grade_distributions.ab_count +
+    grade_distributions.b_count +
+    grade_distributions.bc_count +
+    grade_distributions.c_count +
+    grade_distributions.d_count +
+    grade_distributions.f_count
+  ) > 0
+
+  ORDER BY gpa_medio ASC
+
+  LIMIT 1
+")
+
+disciplina_dificil
+```
+
+```{r}
+disciplina_facil <- dbGetQuery(conn, "
+  SELECT
+    courses.number AS disciplina,
+    courses.name AS nome_disciplina,
+
+    AVG(
+      (
+        4.0 * grade_distributions.a_count +
+        3.5 * grade_distributions.ab_count +
+        3.0 * grade_distributions.b_count +
+        2.5 * grade_distributions.bc_count +
+        2.0 * grade_distributions.c_count +
+        1.0 * grade_distributions.d_count +
+        0.0 * grade_distributions.f_count
+      )
+      /
+      NULLIF(
+        grade_distributions.a_count +
+        grade_distributions.ab_count +
+        grade_distributions.b_count +
+        grade_distributions.bc_count +
+        grade_distributions.c_count +
+        grade_distributions.d_count +
+        grade_distributions.f_count,
+        0
+      )
+    ) AS gpa_medio
+
+  FROM subjects
+
+  INNER JOIN subject_memberships
+    ON subjects.code = subject_memberships.subject_code
+
+  INNER JOIN course_offerings
+    ON subject_memberships.course_offering_uuid = course_offerings.uuid
+
+  INNER JOIN courses
+    ON course_offerings.course_uuid = courses.uuid
+
+  INNER JOIN grade_distributions
+    ON course_offerings.uuid = grade_distributions.course_offering_uuid
+
+  WHERE subjects.abbreviation = 'STAT'
+
+  GROUP BY courses.uuid, courses.number, courses.name
+
+  ORDER BY gpa_medio DESC
+
+  LIMIT 1
+")
+
+disciplina_facil
+```
+
+4) 
+
+```{r}
+dbDisconnect(conn)
+```
+
+```{r}
+Sys.setenv(TZ = "America/Sao_Paulo")
+Sys.time()
+```
+
