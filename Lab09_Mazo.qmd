@@ -1,0 +1,123 @@
+---
+title: "Lab09_Mazo"
+author: "Gustavo Mazo Vieira"
+format: pdf
+---
+
+1)
+
+```{python}
+
+from plotnine import *
+from plotnine.data import diamonds
+import pandas as pd
+
+print(diamonds.head())
+print(diamonds.shape)
+print(diamonds.info())
+
+```
+
+2)
+
+```{python}
+quest2 = (
+    ggplot(diamonds, aes(x="carat", y="price")) +
+      geom_point(
+        alpha=0.2,
+        size=0.7,
+        color="steelblue"
+    ) + 
+    labs(
+        title="Carat x Price",
+        x="Carat",
+        y="Price",
+    )
+    + theme_minimal()
+)
+
+print(quest2)
+
+```
+
+Resposta da 2: O gráfico 'quest2' nos demonstra que, de maneira geral, Price e 
+Carat se associam de maneira positiva (quanto maior Carat, maior Price). Entre-
+tanto, apesar dessa relação entre Carat e Price, a imensa variação de preço dado
+um mesmo peso indica que o Carat não é o único fator que afeta o valor final de
+Price e que o gráfico sugere que a relação entre ambas não deve ser uma 
+relação linear. Para melhorar a qualidade da visualização, foram utilizados 
+pontos pequenos e semitransparentes, reduzindo a sobreposição das observações, 
+além do título, rótulos dos eixos e um tema minimalista.
+
+3)
+
+```{python}
+
+quest3 = (ggplot(diamonds, aes(x="carat", y="price")) +
+      geom_point(
+        alpha=0.2,
+        size=0.7,
+        color="steelblue"
+    ) +
+      facet_wrap("~cut", ncol=3) +
+      labs(
+        title="Carat x Price por Cut",
+        x="Carat",
+        y="Price"
+    ) + 
+    theme_minimal()
+)
+
+print(quest3)
+```
+
+Resposta da 3: O gráfico "quest3" revela que, em todas as categorias de corte,
+Price e Carat se associam de maneira positiva (como foi mostrado na questão 2).
+Assim como observado na análise anterior, a relação parece ser não linear, 
+pois os preços tendem a aumentar de forma mais acentuada para diamantes de 
+maior peso. Entretanto, existem diferenças na distribuição e na dispersão de 
+Price entre as categorias de Cut, indicando que o comportamento dos preços não é
+exatamente igual para todos os cortes. Além disso, há uma variação considerável 
+nos preços de diamantes com valores de Carat semelhantes dentro de cada grupo. 
+Portanto, embora a tendência geral seja semelhante entre as categorias, 
+a relação entre peso e preço apresenta diferenças conforme a qualidade do corte.
+Exemplo: Note que para Carat = 2, o grupo Premium apresenta um preço médio
+superior ao grupo Fair.
+
+4)
+
+```{python}
+
+quest4 = (ggplot(diamonds,aes(x="carat", y="price", color="color")
+    ) + 
+    geom_point(
+        alpha=0.2,
+        size=0.7
+    ) + 
+    facet_grid("cut ~ clarity") + 
+    labs(
+        title="Carat x Price por Cut, Color e Clarity",
+        x="Peso (quilates)",
+        y="Preço (USD)",
+        color="Color"
+    ) + theme_minimal())
+
+print(quest4)
+
+```
+
+Resposta da 4: A principal dificuldade encontrada foi representar um grande 
+número de observações e classificações diferentes sem comprometer a 
+legibilidade. Para contornar esse problema, foram utilizados painéis separados 
+por Cut e Clarity, enquanto as cores dos pontos representam Color. 
+Sobre cada combinação possível, podemos observar que a dispersão e a quantidade 
+de observações variam entre os grupos, sendo algumas combinações muito menos 
+representadas do que outras. As diferenças entre cada grupo nos fazem confirmar
+a nossa sugestão feita na questão 2 (que Carat não é o único fator que afeta o 
+valor final de Price).
+
+```{r}
+Sys.setenv(TZ = "America/Sao_Paulo")
+Sys.time()
+```
+
